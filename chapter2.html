@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chapter 1</title>
+    <style>
+        body {
+            background-color: white;
+            color: black;
+            font-family: 'Georgia', serif;
+            text-align: center;
+        }
+        #chapterTitle {
+            margin-top: 20px;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .controls button {
+            margin-right: 10px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 2px solid black;
+        }
+        .edit-button {
+            background-color: lightblue;
+            color: white;
+        }
+        .delete-button {
+            background-color: red;
+            color: white;
+        }
+        .save-button {
+            background-color: green;
+            color: white;
+        }
+        .add-image-button {
+            background-color: orange;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="chapterContainer">
+        <div id="imageContainer" class="image-container"></div>
+        <h1 id="chapterTitle" contenteditable="false">The Mysterious Forest</h1>
+        <div id="storyContainer">
+            <p id="storyText" class="story" contenteditable="false">
+                Emma had always been curious about the dense forest at the edge of her village...
+            </p>
+        </div>
+    </div>
+    <div class="controls">
+        <button class="edit-button" onclick="editContent()">Edit</button>
+        <button class="save-button" onclick="saveContent()">Save</button>
+        <input type="file" id="imageInput" style="display:none;" accept="image/*">
+        <button class="add-image-button" onclick="document.getElementById('imageInput').click()">Add Image</button>
+        <button class="delete-button" onclick="deleteText()">Delete Text</button>
+    </div>
+    <a href="index.html">Back to Home</a>
+
+    <script>
+        function editContent() {
+            const storyText = document.getElementById('storyText');
+            const chapterTitle = document.getElementById('chapterTitle');
+            storyText.contentEditable = storyText.contentEditable === "true" ? "false" : "true";
+            chapterTitle.contentEditable = chapterTitle.contentEditable === "true" ? "false" : "true";
+            storyText.focus();
+        }
+
+        function deleteText() {
+            const storyText = document.getElementById('storyText');
+            const chapterTitle = document.getElementById('chapterTitle');
+            storyText.innerText = '';
+            chapterTitle.innerText = '';
+        }
+
+        function saveContent() {
+            const chapterContainer = document.getElementById('chapterContainer').innerHTML;
+            localStorage.setItem('savedChapter', chapterContainer);
+            alert('Content saved!');
+        }
+
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageContainer = document.getElementById('imageContainer');
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-button');
+                deleteButton.innerText = 'X';
+                deleteButton.onclick = deleteImage;
+                const imageWrapper = document.createElement('div');
+                imageWrapper.style.position = 'relative';
+                imageWrapper.style.display = 'inline-block';
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Image';
+                img.style.maxWidth = '100%';
+                imageWrapper.appendChild(img);
+                imageWrapper.appendChild(deleteButton);
+                imageContainer.innerHTML = '';
+                imageContainer.appendChild(imageWrapper);
+            }
+            reader.readAsDataURL(file);
+        });
+
+        function deleteImage() {
+            const imageContainer = document.getElementById('imageContainer');
+            imageContainer.innerHTML = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const savedChapter = localStorage.getItem('savedChapter');
+            if (savedChapter) {
+                document.getElementById('chapterContainer').innerHTML = savedChapter;
+            }
+        });
+    </script>
+</body>
+</html>

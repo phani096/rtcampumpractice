@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Excel/CSV Data Management</title>
+    <style>
+        body {
+            background-color: white;
+            color: black;
+            font-family: 'Georgia', serif;
+            text-align: center;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .controls button, .controls input[type="file"] {
+            margin-right: 10px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 2px solid black;
+        }
+        .upload-file-button {
+            background-color: purple;
+            color: white;
+        }
+        .modify-button {
+            background-color: blue;
+            color: white;
+        }
+        .save-db-button {
+            background-color: teal;
+            color: white;
+        }
+        .retrieve-button {
+            background-color: brown;
+            color: white;
+        }
+        #dataDisplay {
+            margin-top: 20px;
+            display: none;
+            text-align: left;
+            margin-left: auto;
+            margin-right: auto;
+            border-collapse: collapse;
+        }
+        #dataDisplay td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        .cell-modified {
+            background-color: lightyellow;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <input type="file" id="fileInput" style="display:none;" accept=".csv, .xlsx">
+        <button class="upload-file-button" onclick="document.getElementById('fileInput').click()">Upload Excel/CSV</button>
+        <button class="modify-button" onclick="modifyData()">Modify</button>
+        <button class="save-db-button" onclick="saveToDatabase()">Save to Database</button>
+        <button class="retrieve-button" onclick="retrieveFromDatabase()">Retrieve from Database</button>
+    </div>
+    <table id="dataDisplay"></table>
+
+    <script>
+        let uploadedData = null;
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('http://localhost:3000/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    uploadedData = data;
+                    displayData(data);
+                })
+                .catch(error => {
+                    console.error('Error uploading file:', error);
+                });
+            }
+        });
+
+        function displayData(data) {
+            const table = document.getElementById('dataDisplay');
+            table.innerHTML = ''; // Clear previous data
+
+            data.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                row.forEach((cell, cellIndex) => {
+                    const td = document.createElement('td');
+                    td.innerText = cell;
+                    td.setAttribute('data-row', rowIndex);
+                    td.setAttribute('data-cell', cellIndex);
+                    td.addEventListener('click', function() {
+                        this.classList.add('cell-modified');
+                    });
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+
+            table.style.display = 'table';
+        }
+
+        function modifyData() {
+            if (!uploadedData) {
+                alert('Please upload data first.');
+                return;
+            }
+            console.log('Modify data');
+            // Add your modification logic here
+        }
+
+        function saveToDatabase() {
+            if (!uploadedData) {
+                alert('Please upload data first.');
+                return;
+            }
+            fetch('http://localhost:3000/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ data: uploadedData })
+            })
+            .then(response => response.text())
+            .then(result => {
+                console.log('Data saved to database:', result);
+            })
+            .catch(error => {
+                console.error('Error saving to database:', error);
+            });
+        }
+
+        function retrieveFromDatabase() {
+            fetch('http://localhost:3000/retrieve')
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    throw new Error('No data in database');
+                }
+                displayData(data);
+            })
+            .catch(err => {
+                console.error('Failed to fetch data:', err.message);
+            });
+        }
+    </script>
+</body>
+</html>
